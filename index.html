@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>نظام التصفح الذكي المتقدم</title>
+    <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #d10a11;
+            --secondary-color: #1a1a1a;
+            --text-color: #333;
+            --light-bg: #f5f5f5;
+            --dark-bg: #222;
+            --panel-width: 100%;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Almarai', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            color: var(--text-color);
+            touch-action: manipulation;
+        }
+        
+        .header {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            z-index: 100;
+            position: fixed;
+            top: 0;
+            width: 100%;
+        }
+        
+        .logo {
+            font-weight: 800;
+            font-size: 20px;
+            color: var(--primary-color);
+        }
+        
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .timer {
+            font-family: 'Courier New', monospace;
+            background-color: rgba(0,0,0,0.5);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .language-selector {
+            position: relative;
+        }
+        
+        .language-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-family: 'Almarai', sans-serif;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px;
+        }
+        
+        .language-flag {
+            width: 20px;
+            height: 15px;
+            object-fit: cover;
+            border-radius: 2px;
+        }
+        
+        .language-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            overflow: hidden;
+            display: none;
+            z-index: 1000;
+            width: 120px;
+        }
+        
+        .language-dropdown.show {
+            display: block;
+        }
+        
+        .language-option {
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 14px;
+        }
+        
+        .language-option:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .main-container {
+            height: 100vh;
+            padding-top: 60px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .controls-panel {
+            width: var(--panel-width);
+            background-color: var(--light-bg);
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .panel-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 700;
+            color: var(--secondary-color);
+            font-size: 14px;
+        }
+        
+        .url-input, .number-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Almarai', sans-serif;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .url-input:focus, .number-input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(209, 10, 17, 0.2);
+        }
+        
+        .buttons-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-family: 'Almarai', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #b0080e;
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #333;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-icon {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .status-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .status-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 15px;
+        }
+        
+        .status-text {
+            line-height: 1.5;
+            font-size: 14px;
+        }
+        
+        .progress-container {
+            margin-bottom: 15px;
+        }
+        
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .progress-bar {
+            height: 15px;
+            background-color: #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), #f05a5a);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        .scroll-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .scroll-btn {
+            flex: 1;
+            padding: 8px;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+        
+        .scroll-btn:hover {
+            background-color: #333;
+        }
+        
+        .pulse-animation {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(209, 10, 17, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(209, 10, 17, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(209, 10, 17, 0); }
+        }
+        
+        /* تحسينات للأجهزة المحمولة */
+        @media (min-width: 768px) {
+            :root {
+                --panel-width: 400px;
+            }
+            
+            .main-container {
+                display: flex;
+                flex-direction: row-reverse;
+                padding-top: 0;
+            }
+            
+            .header {
+                position: static;
+            }
+            
+            .controls-panel {
+                height: 100vh;
+                border-left: 1px solid #ddd;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo" data-i18n="app_title">نظام التصفح الذكي</div>
+        <div class="header-controls">
+            <div class="timer" id="timer">00:00:00</div>
+            <div class="language-selector">
+                <button class="language-btn">
+                    <img src="https://flagcdn.com/w20/dz.png" class="language-flag" id="current-flag">
+                    <span id="current-language">العربية</span>
+                </button>
+                <div class="language-dropdown" id="language-dropdown">
+                    <div class="language-option" data-lang="ar" data-flag="dz">
+                        <img src="https://flagcdn.com/w20/dz.png" class="language-flag">
+                        <span data-i18n="language_ar">العربية</span>
+                    </div>
+                    <div class="language-option" data-lang="en" data-flag="us">
+                        <img src="https://flagcdn.com/w20/us.png" class="language-flag">
+                        <span data-i18n="language_en">English</span>
+                    </div>
+                    <div class="language-option" data-lang="fr" data-flag="fr">
+                        <img src="https://flagcdn.com/w20/fr.png" class="language-flag">
+                        <span data-i18n="language_fr">Français</span>
+                    </div>
+                    <div class="language-option" data-lang="es" data-flag="es">
+                        <img src="https://flagcdn.com/w20/es.png" class="language-flag">
+                        <span data-i18n="language_es">Español</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="main-container">
+        <div class="controls-panel">
+            <h2 class="panel-title" data-i18n="control_panel">لوحة التحكم المتقدمة</h2>
+            
+            <div class="input-group">
+                <label for="siteUrl" class="input-label" data-i18n="site_url">رابط الموقع:</label>
+                <input type="url" id="siteUrl" class="url-input" placeholder="https://www.example.com" required>
+            </div>
+            
+            <div class="input-group">
+                <label for="refreshCount" class="input-label" data-i18n="refresh_count">عدد مرات التحديث:</label>
+                <input type="number" id="refreshCount" class="number-input" min="1" value="20">
+                <small data-i18n="infinite_note">(0 للتحديث بدون توقف)</small>
+            </div>
+            
+            <div class="input-group">
+                <label for="refreshDelay" class="input-label" data-i18n="refresh_delay">فترة التحديث (ثانية):</label>
+                <input type="number" id="refreshDelay" class="number-input" min="5" value="33">
+            </div>
+            
+            <div class="buttons-group">
+                <button id="startBtn" class="btn btn-primary">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    <span data-i18n="start_system">بدء النظام</span>
+                </button>
+                <button id="stopBtn" class="btn btn-secondary" disabled>
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M6 6h12v12H6z"/>
+                    </svg>
+                    <span data-i18n="stop_system">إيقاف النظام</span>
+                </button>
+            </div>
+            
+            <div class="scroll-controls">
+                <button id="autoScrollBtn" class="scroll-btn" data-i18n="auto_scroll">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
+                    </svg>
+                    <span data-i18n="auto_scroll">تشغيل التمرير التلقائي</span>
+                </button>
+                <button id="stopScrollBtn" class="scroll-btn" disabled data-i18n="stop_scroll">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+                    </svg>
+                    <span data-i18n="stop_scroll">إيقاف التمرير</span>
+                </button>
+            </div>
+            
+            <div class="status-card">
+                <h3 class="status-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--primary-color)">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                    </svg>
+                    <span data-i18n="system_info">معلومات النظام</span>
+                </h3>
+                <p id="statusText" class="status-text" data-i18n="ready">جاهز للتشغيل</p>
+                <p id="counterText" class="status-text" data-i18n="refresh_remaining">عدد التحديثات المتبقية: 20</p>
+                <p id="scrollStatus" class="status-text" data-i18n="scroll_status">حالة التمرير: متوقف</p>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-info">
+                    <span data-i18n="progress">تقدم العملية:</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill">0%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ترجمة النصوص لكل اللغات
+        const translations = {
+            ar: {
+                app_title: "نظام التصفح الذكي",
+                control_panel: "لوحة التحكم المتقدمة",
+                site_url: "رابط الموقع:",
+                refresh_count: "عدد مرات التحديث:",
+                refresh_delay: "فترة التحديث (ثانية):",
+                infinite_note: "(0 للتحديث بدون توقف)",
+                start_system: "بدء النظام",
+                stop_system: "إيقاف النظام",
+                auto_scroll: "تشغيل التمرير التلقائي",
+                stop_scroll: "إيقاف التمرير",
+                system_info: "معلومات النظام",
+                ready: "جاهز للتشغيل",
+                refresh_remaining: "عدد التحديثات المتبقية:",
+                scroll_status: "حالة التمرير:",
+                progress: "تقدم العملية:",
+                language_ar: "العربية",
+                language_en: "الإنجليزية",
+                language_fr: "الفرنسية",
+                language_es: "الإسبانية",
+                alert_enter_url: "الرجاء إدخال رابط الموقع",
+                alert_valid_url: "الرجاء إدخال رابط صحيح (يجب أن يبدأ بـ http:// أو https://)",
+                status_loading: "جاري تحميل الموقع...",
+                status_refreshing: "جاري تحديث الموقع...",
+                status_completed: "اكتملت دورة التحديثات بنجاح",
+                status_stopped: "تم إيقاف النظام",
+                scroll_active: "نشط (تلقائي)",
+                scroll_stopped: "متوقف",
+                infinite_mode: "وضع غير منتهي"
+            },
+            en: {
+                app_title: "Smart Browsing System",
+                control_panel: "Advanced Control Panel",
+                site_url: "Website URL:",
+                refresh_count: "Refresh count:",
+                refresh_delay: "Refresh delay (seconds):",
+                infinite_note: "(0 for infinite refresh)",
+                start_system: "Start System",
+                stop_system: "Stop System",
+                auto_scroll: "Enable Auto Scroll",
+                stop_scroll: "Stop Scrolling",
+                system_info: "System Information",
+                ready: "Ready to Start",
+                refresh_remaining: "Remaining refreshes:",
+                scroll_status: "Scroll status:",
+                progress: "Progress:",
+                language_ar: "Arabic",
+                language_en: "English",
+                language_fr: "French",
+                language_es: "Spanish",
+                alert_enter_url: "Please enter website URL",
+                alert_valid_url: "Please enter valid URL (must start with http:// or https://)",
+                status_loading: "Loading website...",
+                status_refreshing: "Refreshing website...",
+                status_completed: "Refresh cycle completed successfully",
+                status_stopped: "System stopped",
+                scroll_active: "Active (Auto)",
+                scroll_stopped: "Stopped",
+                infinite_mode: "Infinite mode"
+            },
+            fr: {
+                app_title: "Système de navigation intelligent",
+                control_panel: "Panneau de contrôle avancé",
+                site_url: "URL du site Web:",
+                refresh_count: "Nombre d'actualisations:",
+                refresh_delay: "Délai d'actualisation (secondes):",
+                infinite_note: "(0 pour actualisation infinie)",
+                start_system: "Démarrer le système",
+                stop_system: "Arrêter le système",
+                auto_scroll: "Activer le défilement automatique",
+                stop_scroll: "Arrêter le défilement",
+                system_info: "Informations système",
+                ready: "Prêt à démarrer",
+                refresh_remaining: "Actualisations restantes:",
+                scroll_status: "État du défilement:",
+                progress: "Progression:",
+                language_ar: "Arabe",
+                language_en: "Anglais",
+                language_fr: "Français",
+                language_es: "Espagnol",
+                alert_enter_url: "Veuillez entrer l'URL du site Web",
+                alert_valid_url: "Veuillez entrer une URL valide (doit commencer par http:// ou https://)",
+                status_loading: "Chargement du site Web...",
+                status_refreshing: "Actualisation du site Web...",
+                status_completed: "Cycle d'actualisation terminé avec succès",
+                status_stopped: "Système arrêté",
+                scroll_active: "Actif (Auto)",
+                scroll_stopped: "Arrêté",
+                infinite_mode: "Mode infini"
+            },
+            es: {
+                app_title: "Sistema de navegación inteligente",
+                control_panel: "Panel de control avanzado",
+                site_url: "URL del sitio web:",
+                refresh_count: "Número de actualizaciones:",
+                refresh_delay: "Intervalo de actualización (segundos):",
+                infinite_note: "(0 para actualización infinita)",
+                start_system: "Iniciar sistema",
+                stop_system: "Detener sistema",
+                auto_scroll: "Activar desplazamiento automático",
+                stop_scroll: "Detener desplazamiento",
+                system_info: "Información del sistema",
+                ready: "Listo para iniciar",
+                refresh_remaining: "Actualizaciones restantes:",
+                scroll_status: "Estado de desplazamiento:",
+                progress: "Progreso:",
+                language_ar: "Árabe",
+                language_en: "Inglés",
+                language_fr: "Francés",
+                language_es: "Español",
+                alert_enter_url: "Por favor ingrese la URL del sitio web",
+                alert_valid_url: "Por favor ingrese una URL válida (debe comenzar con http:// o https://)",
+                status_loading: "Cargando sitio web...",
+                status_refreshing: "Actualizando sitio web...",
+                status_completed: "Ciclo de actualización completado con éxito",
+                status_stopped: "Sistema detenido",
+                scroll_active: "Activo (Auto)",
+                scroll_stopped: "Detenido",
+                infinite_mode: "Modo infinito"
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // العناصر الرئيسية
+            const siteUrlInput = document.getElementById('siteUrl');
+            const refreshCountInput = document.getElementById('refreshCount');
+            const refreshDelayInput = document.getElementById('refreshDelay');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const statusText = document.getElementById('statusText');
+            const counterText = document.getElementById('counterText');
+            const scrollStatus = document.getElementById('scrollStatus');
+            const progressFill = document.getElementById('progressFill');
+            const progressPercent = document.getElementById('progressPercent');
+            const autoScrollBtn = document.getElementById('autoScrollBtn');
+            const stopScrollBtn = document.getElementById('stopScrollBtn');
+            const timer = document.getElementById('timer');
+            const languageBtn = document.querySelector('.language-btn');
+            const languageDropdown = document.getElementById('language-dropdown');
+            const currentFlag = document.getElementById('current-flag');
+            const currentLanguage = document.getElementById('current-language');
+            
+            // المتغيرات
+            let refreshInterval;
+            let scrollInterval;
+            let refreshCount = 0;
+            let totalRefreshes = 20;
+            let refreshDelay = 33000; // 33 ثانية بالمللي ثانية
+            let isAutoScrolling = false;
+            let startTime;
+            let currentLang = 'ar';
+            let hiddenWindow = null;
+            
+            // تهيئة اللغة
+            initLanguage();
+            
+            // الأحداث
+            startBtn.addEventListener('click', startSystem);
+            stopBtn.addEventListener('click', stopSystem);
+            autoScrollBtn.addEventListener('click', toggleAutoScroll);
+            stopScrollBtn.addEventListener('click', stopAutoScroll);
+            languageBtn.addEventListener('click', toggleLanguageDropdown);
+            
+            // اختيار اللغة
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    const lang = option.getAttribute('data-lang');
+                    const flag = option.getAttribute('data-flag');
+                    changeLanguage(lang, flag);
+                });
+            });
+            
+            // بدء النظام
+            function startSystem() {
+                const url = siteUrlInput.value.trim();
+                
+                if (!url) {
+                    showAlert(translate('alert_enter_url'));
+                    return;
+                }
+                
+                try {
+                    new URL(url);
+                } catch (e) {
+                    showAlert(translate('alert_valid_url'));
+                    return;
+                }
+                
+                // الحصول على إعدادات المستخدم
+                totalRefreshes = parseInt(refreshCountInput.value) || 0;
+                const delaySeconds = parseInt(refreshDelayInput.value) || 33;
+                refreshDelay = delaySeconds * 1000;
+                
+                // تهيئة النظام
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                startBtn.classList.add('pulse-animation');
+                startTime = new Date();
+                updateTimer();
+                
+                refreshCount = 0;
+                updateProgress();
+                updateStatus(translate('status_loading'));
+                
+                // فتح نافذة مخفية
+                openHiddenWindow(url);
+                
+                // بدء التحديث التلقائي
+                refreshInterval = setInterval(() => {
+                    refreshCount++;
+                    
+                    if (totalRefreshes > 0 && refreshCount >= totalRefreshes) {
+                        stopSystem();
+                        updateStatus(translate('status_completed'));
+                        return;
+                    }
+                    
+                    // تحديث الموقع
+                    reloadSite(url);
+                    
+                    if (totalRefreshes > 0) {
+                        updateStatus(`${translate('status_refreshing')} (${refreshCount}/${totalRefreshes})`);
+                    } else {
+                        updateStatus(`${translate('status_refreshing')} (${refreshCount}) - ${translate('infinite_mode')}`);
+                    }
+                    
+                    updateProgress();
+                    
+                }, refreshDelay);
+            }
+            
+            // فتح نافذة مخفية
+            function openHiddenWindow(url) {
+                // إغلاق النافذة السابقة إذا كانت مفتوحة
+                if (hiddenWindow && !hiddenWindow.closed) {
+                    hiddenWindow.close();
+                }
+                
+                // فتح نافذة جديدة خارج الشاشة
+                hiddenWindow = window.open(url, '_blank', 'width=1,height=1,left=-9999,top=-9999');
+                
+                // التأكد من تحميل الصفحة
+                if (hiddenWindow) {
+                    hiddenWindow.addEventListener('load', () => {
+                        updateStatus(translate('status_loading') + ' - ' + translate('ready'));
+                    });
+                }
+            }
+            
+            // إعادة تحميل الموقع
+            function reloadSite(url) {
+                if (hiddenWindow && !hiddenWindow.closed) {
+                    try {
+                        hiddenWindow.location.reload(true);
+                    } catch (e) {
+                        // طريقة بديلة في حالة وجود مشاكل أمان
+                        hiddenWindow.location.href = url + (url.includes('?') ? '&' : '?') + 'refresh=' + Date.now();
+                    }
+                } else {
+                    // إعادة فتح النافذة إذا كانت مغلقة
+                    openHiddenWindow(url);
+                }
+            }
+            
+            // إيقاف النظام
+            function stopSystem() {
+                clearInterval(refreshInterval);
+                stopAutoScroll();
+                
+                // إغلاق النافذة المخفية
+                if (hiddenWindow && !hiddenWindow.closed) {
+                    hiddenWindow.close();
+                }
+                
+                updateStatus(translate('status_stopped'));
+                resetControls();
+            }
+            
+            // التحكم في التمرير التلقائي
+            function toggleAutoScroll() {
+                if (isAutoScrolling) {
+                    stopAutoScroll();
+                } else {
+                    startAutoScroll();
+                }
+            }
+            
+            function startAutoScroll() {
+                isAutoScrolling = true;
+                autoScrollBtn.disabled = true;
+                stopScrollBtn.disabled = false;
+                scrollStatus.textContent = translate('scroll_status') + ' ' + translate('scroll_active');
+                
+                // تبديل الاتجاه كل 30 ثانية
+                scrollInterval = setInterval(() => {
+                    // يمكن تنفيذ التمرير هنا إذا كان هناك iframe مرئي
+                }, 30000);
+            }
+            
+            function stopAutoScroll() {
+                isAutoScrolling = false;
+                clearInterval(scrollInterval);
+                autoScrollBtn.disabled = false;
+                stopScrollBtn.disabled = true;
+                scrollStatus.textContent = translate('scroll_status') + ' ' + translate('scroll_stopped');
+            }
+            
+            // تحديث العداد
+            function updateTimer() {
+                if (!startTime) return;
+                
+                const now = new Date();
+                const diff = now - startTime;
+                
+                const hours = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0');
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
+                
+                timer.textContent = `${hours}:${minutes}:${seconds}`;
+                setTimeout(updateTimer, 1000);
+            }
+            
+            // تحديث حالة التقدم
+            function updateProgress() {
+                let progress = 0;
+                if (totalRefreshes > 0) {
+                    progress = (refreshCount / totalRefreshes) * 100;
+                }
+                
+                progressFill.style.width = `${progress}%`;
+                progressFill.textContent = `${Math.round(progress)}%`;
+                progressPercent.textContent = `${Math.round(progress)}%`;
+                
+                if (totalRefreshes > 0) {
+                    counterText.textContent = `${translate('refresh_remaining')} ${totalRefreshes - refreshCount}`;
+                } else {
+                    counterText.textContent = `${translate('refresh_remaining')} ∞ (${refreshCount})`;
+                }
+            }
+            
+            // تحديث حالة النظام
+            function updateStatus(text) {
+                statusText.textContent = text;
+            }
+            
+            // إعادة تعيين عناصر التحكم
+            function resetControls() {
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                startBtn.classList.remove('pulse-animation');
+                stopAutoScroll();
+            }
+            
+            // عرض تنبيه
+            function showAlert(message) {
+                updateStatus(message);
+                setTimeout(() => {
+                    if (statusText.textContent === message) {
+                        statusText.textContent = translate('ready');
+                    }
+                }, 3000);
+            }
+            
+            // إدارة اللغة
+            function initLanguage() {
+                // حاول الحصول على اللغة المحفوظة
+                const savedLang = localStorage.getItem('app_language') || 'ar';
+                const savedFlag = localStorage.getItem('app_flag') || 'dz';
+                changeLanguage(savedLang, savedFlag);
+            }
+            
+            function toggleLanguageDropdown() {
+                languageDropdown.classList.toggle('show');
+            }
+            
+            function changeLanguage(lang, flag) {
+                currentLang = lang;
+                currentFlag.src = `https://flagcdn.com/w20/${flag}.png`;
+                currentLanguage.textContent = translations[lang][`language_${lang}`];
+                
+                // تحديث جميع النصوص
+                document.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    el.textContent = translations[lang][key] || translations['ar'][key];
+                });
+                
+                // تحديث placeholder
+                siteUrlInput.placeholder = 'https://www.example.com';
+                
+                // حفظ التفضيلات
+                localStorage.setItem('app_language', lang);
+                localStorage.setItem('app_flag', flag);
+                
+                // إغلاق القائمة
+                languageDropdown.classList.remove('show');
+            }
+            
+            function translate(key) {
+                return translations[currentLang][key] || key;
+            }
+            
+            // إغلاق قائمة اللغة عند النقر خارجها
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.language-selector')) {
+                    languageDropdown.classList.remove('show');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
